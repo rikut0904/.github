@@ -8,20 +8,11 @@ on:
 jobs:
   setup-labels:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
     steps:
-      - name: Check if already setup
-        id: check
-        run: |
-          if gh label list --repo ${{ github.repository }} --json name --jq '.[].name' | grep -q "^refactor$"; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Delete all existing labels
-        if: steps.check.outputs.skip == 'false'
         run: |
           gh label list --repo ${{ github.repository }} --json name --jq '.[].name' | while read -r label; do
             gh label delete "$label" --repo ${{ github.repository }} --yes
@@ -30,7 +21,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create labels
-        if: steps.check.outputs.skip == 'false'
         run: |
           labels=(
             "bug|d73a4a|バグ報告"
