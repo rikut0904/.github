@@ -12,13 +12,20 @@ jobs:
       issues: write
       contents: read
     steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Delete all existing labels
         run: |
           gh label list --repo ${{ github.repository }} --json name --jq '.[].name' | while read -r label; do
             gh label delete "$label" --repo ${{ github.repository }} --yes
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Create labels
         run: |
@@ -36,4 +43,4 @@ jobs:
             gh label create "$name" --repo ${{ github.repository }} --color "$color" --description "$description"
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
