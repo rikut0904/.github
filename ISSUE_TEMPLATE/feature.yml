@@ -1,6 +1,6 @@
 name: 機能追加テンプレート
 description: 新たな機能の追加はこちらから
-labels: ["enhancement"]
+labels: ["feature"]
 body:
   - type: textarea
     id: task

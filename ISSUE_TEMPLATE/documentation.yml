@@ -1,6 +1,6 @@
 name: ドキュメント改善テンプレート
 description: ドキュメントの追加・修正はこちらから
-labels: ["documentation"]
+labels: ["docs"]
 body:
   - type: textarea
     id: task

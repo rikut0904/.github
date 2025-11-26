@@ -1,6 +1,6 @@
-name: パフォーマンス改善テンプレート
-description: パフォーマンスの改善はこちらから
-labels: ["performance"]
+name: その他テンプレート
+description: その他のタスク（ビルド・設定変更など）はこちらから
+labels: ["other"]
 body:
   - type: textarea
     id: task
