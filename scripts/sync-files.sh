@@ -1,11 +1,12 @@
 #!/bin/bash
+set -e
 
 # 使用方法: ./sync-files.sh [owner]
 # 引数なし: 自分のすべてのリポジトリに適用
 # 引数あり: 指定したowner/orgのすべてのリポジトリに適用
 
 OWNER=$1
-SCRIPT_DIR=$(cd $(dirname $0); pwd)
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 TEMPLATE_DIR=$(dirname "$SCRIPT_DIR")
 
 # コピー対象ファイルのパス
@@ -13,15 +14,12 @@ CONTRIBUTING_FILE="$TEMPLATE_DIR/CONTRIBUTING.md"
 LICENSE_FILE="$TEMPLATE_DIR/LICENSE"
 
 # ファイルの存在確認
-if [ ! -f "$CONTRIBUTING_FILE" ]; then
-  echo "エラー: CONTRIBUTING.md が見つかりません: $CONTRIBUTING_FILE"
-  exit 1
-fi
-
-if [ ! -f "$LICENSE_FILE" ]; then
-  echo "エラー: LICENSE が見つかりません: $LICENSE_FILE"
-  exit 1
-fi
+for file in "$CONTRIBUTING_FILE" "$LICENSE_FILE"; do
+  if [ ! -f "$file" ]; then
+    echo "エラー: ファイルが見つかりません: $file"
+    exit 1
+  fi
+done
 
 # リポジトリ一覧を取得
 if [ -z "$OWNER" ]; then
@@ -47,49 +45,50 @@ for repo in $repos; do
   echo "=== $repo ==="
 
   # リポジトリをクローン
-  REPO_DIR="$TEMP_DIR/$(basename $repo)"
-  if ! gh repo clone "$repo" "$REPO_DIR" -- --depth 1 2>/dev/null; then
+  REPO_DIR="$TEMP_DIR/$(basename "$repo")"
+  if ! gh repo clone "$repo" "$REPO_DIR" -- --depth 1 --quiet 2>&1; then
     echo "  スキップ: クローンに失敗しました"
     continue
   fi
 
-  cd "$REPO_DIR"
+  # サブシェルで処理（自動的に元のディレクトリに戻る）
+  (
+    cd "$REPO_DIR" || exit
 
-  # デフォルトブランチを取得
-  DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+    # デフォルトブランチを取得
+    if ! DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'); then
+      echo "  スキップ: デフォルトブランチの取得に失敗しました"
+      exit 1
+    fi
 
-  # ファイルをコピー
-  cp "$CONTRIBUTING_FILE" "$REPO_DIR/CONTRIBUTING.md"
-  cp "$LICENSE_FILE" "$REPO_DIR/LICENSE"
+    # ファイルをコピー
+    cp "$CONTRIBUTING_FILE" CONTRIBUTING.md
+    cp "$LICENSE_FILE" LICENSE
 
-  # ファイルを追加
-  git add CONTRIBUTING.md LICENSE
+    # ファイルを追加
+    git add CONTRIBUTING.md LICENSE
 
-  # 変更があるか確認（addした後にチェック）
-  if git diff --cached --quiet; then
-    echo "  変更なし"
-    cd "$TEMP_DIR"
-    rm -rf "$REPO_DIR"
-    continue
-  fi
+    # 変更があるか確認
+    if git diff --cached --quiet; then
+      echo "  変更なし"
+      exit 0
+    fi
 
-  # 変更をコミット
-  git commit -m "docs/CONTRIBUTING.mdとLICENSEを同期
+    # 変更をコミット
+    git commit -m "docs/CONTRIBUTING.mdとLICENSEを同期
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
 
-  # プッシュ
-  if git push origin "$DEFAULT_BRANCH" 2>/dev/null; then
-    echo "  ✓ 同期完了"
-  else
-    echo "  ✗ プッシュに失敗しました"
-  fi
-
-  # クリーンアップ
-  cd "$TEMP_DIR"
-  rm -rf "$REPO_DIR"
+    # プッシュ
+    if git push origin "$DEFAULT_BRANCH" --quiet 2>&1; then
+      echo "  ✓ 同期完了"
+    else
+      echo "  ✗ プッシュに失敗しました"
+      exit 1
+    fi
+  )
 done
 
 echo ""
