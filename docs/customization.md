@@ -52,6 +52,7 @@ body:
 ## Pull Requestテンプレートの変更
 
 `PULL_REQUEST_TEMPLATE.md` を編集することで、PRテンプレートをカスタマイズできます。
+
 ## CONTRIBUTINGガイドの変更
 
 `CONTRIBUTING.md` を編集して、プロジェクト固有のコントリビューションルールを追加できます。
