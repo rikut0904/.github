@@ -29,6 +29,20 @@
 └── README.md                # このリポジトリの説明
 ```
 
+## ラベルの前提
+
+Issueテンプレートは、次のラベルを既存のラベルとして参照します。
+
+- `bug`
+- `feature`
+- `docs`
+- `refactor`
+- `other`
+
+ラベルの作成・管理は、[`github_label_create`](https://github.com/rikut0904/github_label_create) に移管しています。
+Issueテンプレートを利用するリポジトリでは、テンプレートを有効にする前に、移管先でこれらのラベルを対象リポジトリへ作成してください。
+ラベルが存在しない場合、Issueフォームの `labels:` による自動付与は機能しません。
+
 ## 使い方
 
 ### 1. Issueテンプレートの利用
